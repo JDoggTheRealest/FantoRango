@@ -4,12 +4,12 @@ import serial
 import time
 
 #Serial stuff
-# ser = serial.Serial("/dev/ttyACM0", 115200, timeout = 1)
-# ser.setDTR(False)
-# time.sleep(1)
-# ser.flushInput()
-# ser.setDTR(True)
-# time.sleep(2)
+ser = serial.Serial("/dev/ttyACM0", 115200, timeout = 1)
+ser.setDTR(False)
+time.sleep(1)
+ser.flushInput()
+ser.setDTR(True)
+time.sleep(2)
 
 #Start videofeed and load CascadeClassifiers
 cap = cv2.VideoCapture(0)
@@ -67,7 +67,6 @@ def findFace(frame, frameX, frameY):
     faces = face_cascade.detectMultiScale(gray, 1.3, 5)
     for (x, y, w, h) in faces:
         distance = math.floor((3.04*142*640*scale)/(w*3.68))#2.54*(2*3.14 * 180)/(w+h*360)*1000 + 3
-        print(distance)
         cv2.rectangle(reframe, (x + frameX, y + frameY), (x + w + frameX,y + h + frameY), (255,0,0), 2)
         return x + frameX, y + frameY, w, h, distance, True
     return 0, 0, 0, 0, 0, False
@@ -104,14 +103,16 @@ while True:
     #Serial stuff
     #print(1/(time.time() - start))
     if(seen):
-        print(f"x{lastX},y{lastY},z{distance},{pressed}") 
+        #print(f"x{lastX + lastW/2 - 2*midX},y{lastY + lastH/2 - 2*midY},z{distance},{pressed}") 
+        ser.write(f"{142*(lastX + lastW/2 - 2*midX)/lastW},{142*(lastY + lastH/2 - 2*midY)/lastW},{distance},{pressed}\n".encode())   
+        #cv2.putText(reframe, f"{142*(lastX + lastW/2 - 2*midX)/lastW:.2f},{142*(lastY + lastH/2 - 2*midY)/lastW:.2f},{distance:.2f},{pressed}\n", (5,100),font,1,(255,255,255),2)
     
-#         if(x + n*midX < midX):
-#             ser.write("x\n".encode())
-#         else:
-#             ser.write("y\n".encode())
-    #cv2.putText(frame, str(distance) + ' mm', (5,100),font,1,(255,255,255),2)
-    cv2.imshow('face detection', reframe)
+        #print(ser.readline().decode('utf-8').rstrip())
+        #if(lastX + lastW/2 < 2*midX):
+        #    ser.write("x\n".encode())
+        #else:
+        #    ser.write("y\n".encode())
+    #cv2.imshow('face detection', reframe)
     
     if cv2.waitKey(1) == ord('q'):
         break
